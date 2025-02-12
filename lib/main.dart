@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:confetti/confetti.dart'; // Import confetti package
 
 void main() {
   runApp(const HeartbeatApp());
@@ -27,23 +28,11 @@ class _HeartbeatScreenState extends State<HeartbeatScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
-  int _seconds = 10;
-  Timer? _timer;
-  final Random _random = Random();
-  String _currentMessage = "Tap the heart ❤️";
-  double _textOpacity = 1.0;
-
-  final List<String> messages = [
-    "You make my heart skip a beat! ❤️",
-    "Happy Valentine's Day, Love! 💖",
-    "You are my forever Valentine! 🌹",
-    "Sending love and hugs your way! 💕",
-    "You hold the key to my heart! 🔑❤️"
-  ];
 
   @override
   void initState() {
     super.initState();
+
     _controller = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
@@ -52,41 +41,15 @@ class _HeartbeatScreenState extends State<HeartbeatScreen>
     )..repeat(reverse: true);
 
     _animation = Tween<double>(begin: 0.8, end: 1.2).animate(_controller);
+
+    _confettiController = ConfettiController(
+        duration: const Duration(seconds: 2)); // Initialize confetti
   }
 
   @override
   void dispose() {
     _controller.dispose();
-    _timer?.cancel();
     super.dispose();
-  }
-
-  void startTimer() {
-    _seconds = 10;
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        if (_seconds > 0) {
-          _seconds--;
-        } else {
-          _timer?.cancel();
-          _controller.stop();
-        }
-      });
-    });
-  }
-
-  void showNewMessage() {
-    setState(() {
-      _currentMessage = messages[_random.nextInt(messages.length)];
-      _textOpacity = 1.0;
-    });
-
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _textOpacity = 0.0;
-      });
-    });
   }
 
   @override
@@ -94,49 +57,23 @@ class _HeartbeatScreenState extends State<HeartbeatScreen>
     return Scaffold(
       backgroundColor: Colors.pink[50],
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              "Countdown: $_seconds sec",
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            GestureDetector(
-              onTap: () {
-                if (_controller.isAnimating) {
-                  _controller.stop();
-                  _timer?.cancel();
-                } else {
-                  _controller.repeat(reverse: true);
-                  startTimer();
-                  showNewMessage(); // Display new message on tap
-                }
-              },
-              child: AnimatedBuilder(
-                animation: _controller,
-                builder: (context, child) {
-                  return Transform.scale(
-                    scale: _animation.value,
-                    child: Image.asset('assets/images/heart.png', width: 150),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 20),
-            AnimatedOpacity(
-              opacity: _textOpacity,
-              duration: const Duration(seconds: 2),
-              child: Text(
-                _currentMessage,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontFamily: 'RomanticFont',
-                  color: Colors.red,
-                ),
-              ),
-            ),
-          ],
+        child: GestureDetector(
+          onTap: () {
+            if (_controller.isAnimating) {
+              _controller.stop();
+            } else {
+              _controller.repeat(reverse: true);
+            }
+          },
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              return Transform.scale(
+                scale: _animation.value,
+                child: Image.asset('assets/images/heart.png', width: 150),
+              );
+            },
+          ),
         ),
       ),
     );
