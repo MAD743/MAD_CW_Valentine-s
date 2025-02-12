@@ -27,9 +27,19 @@ class _HeartbeatScreenState extends State<HeartbeatScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
-  int _seconds = 10; // Countdown timer duration
+  int _seconds = 10;
   Timer? _timer;
   final Random _random = Random();
+  String _currentMessage = "Tap the heart ❤️";
+  double _textOpacity = 1.0;
+
+  final List<String> messages = [
+    "You make my heart skip a beat! ❤️",
+    "Happy Valentine's Day, Love! 💖",
+    "You are my forever Valentine! 🌹",
+    "Sending love and hugs your way! 💕",
+    "You hold the key to my heart! 🔑❤️"
+  ];
 
   @override
   void initState() {
@@ -52,16 +62,29 @@ class _HeartbeatScreenState extends State<HeartbeatScreen>
   }
 
   void startTimer() {
-    _seconds = 10; // Reset timer on start
-    _timer?.cancel(); // Cancel existing timer if any
+    _seconds = 10;
+    _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         if (_seconds > 0) {
           _seconds--;
         } else {
           _timer?.cancel();
-          _controller.stop(); // Stop heartbeat animation
+          _controller.stop();
         }
+      });
+    });
+  }
+
+  void showNewMessage() {
+    setState(() {
+      _currentMessage = messages[_random.nextInt(messages.length)];
+      _textOpacity = 1.0;
+    });
+
+    Future.delayed(const Duration(seconds: 2), () {
+      setState(() {
+        _textOpacity = 0.0;
       });
     });
   }
@@ -86,7 +109,8 @@ class _HeartbeatScreenState extends State<HeartbeatScreen>
                   _timer?.cancel();
                 } else {
                   _controller.repeat(reverse: true);
-                  startTimer(); // Start the countdown when animation starts
+                  startTimer();
+                  showNewMessage(); // Display new message on tap
                 }
               },
               child: AnimatedBuilder(
@@ -97,6 +121,19 @@ class _HeartbeatScreenState extends State<HeartbeatScreen>
                     child: Image.asset('assets/images/heart.png', width: 150),
                   );
                 },
+              ),
+            ),
+            const SizedBox(height: 20),
+            AnimatedOpacity(
+              opacity: _textOpacity,
+              duration: const Duration(seconds: 2),
+              child: Text(
+                _currentMessage,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontFamily: 'RomanticFont',
+                  color: Colors.red,
+                ),
               ),
             ),
           ],
