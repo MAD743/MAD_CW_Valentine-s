@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -25,6 +27,9 @@ class _HeartbeatScreenState extends State<HeartbeatScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
+  int _seconds = 10; // Countdown timer duration
+  Timer? _timer;
+  final Random _random = Random();
 
   @override
   void initState() {
@@ -42,7 +47,23 @@ class _HeartbeatScreenState extends State<HeartbeatScreen>
   @override
   void dispose() {
     _controller.dispose();
+    _timer?.cancel();
     super.dispose();
+  }
+
+  void startTimer() {
+    _seconds = 10; // Reset timer on start
+    _timer?.cancel(); // Cancel existing timer if any
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        if (_seconds > 0) {
+          _seconds--;
+        } else {
+          _timer?.cancel();
+          _controller.stop(); // Stop heartbeat animation
+        }
+      });
+    });
   }
 
   @override
@@ -50,23 +71,35 @@ class _HeartbeatScreenState extends State<HeartbeatScreen>
     return Scaffold(
       backgroundColor: Colors.pink[50],
       body: Center(
-        child: GestureDetector(
-          onTap: () {
-            if (_controller.isAnimating) {
-              _controller.stop();
-            } else {
-              _controller.repeat(reverse: true);
-            }
-          },
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              return Transform.scale(
-                scale: _animation.value,
-                child: Image.asset('assets/images/heart.png', width: 150),
-              );
-            },
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              "Countdown: $_seconds sec",
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            GestureDetector(
+              onTap: () {
+                if (_controller.isAnimating) {
+                  _controller.stop();
+                  _timer?.cancel();
+                } else {
+                  _controller.repeat(reverse: true);
+                  startTimer(); // Start the countdown when animation starts
+                }
+              },
+              child: AnimatedBuilder(
+                animation: _controller,
+                builder: (context, child) {
+                  return Transform.scale(
+                    scale: _animation.value,
+                    child: Image.asset('assets/images/heart.png', width: 150),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
